@@ -5,17 +5,15 @@
 
 ## 1. Data
 
-For this project, we will use the United Healthcare Insurance Dataset, which has JSON files for all the companies they . With over 4 million entries of climbs and ratings, this Kaggle webscraping project is a sufficient size to develop a good predictor model. To view the 8a.nu website, the original Kaggle four SQLite tables created by David Cohen, or the import report using the Kaggle API click on the links below:
+For this project, I used the United Healthcare Insurance Dataset, which has JSON files for all the companies covered by United Health Care and all the purchases for the given year for these clients. This is an extremely large dataset so I was only able to use a part of it (some of these files are terabytes in size). Secondly, I needed files to link providers to hospitals alongside hospital metrics. Fortunately the CMS has publicly available metrics and provider affiliations to hospitals. The folder here contains many metrics; I will only use some of these.
 
 > * [United Healthcare Insurance Dataset](https://transparency-in-coverage.uhc.com/?_gl=1*5it7ok*_ga*NjMzOTkzMDA0LjE2NzI3OTc4MjA.*_ga_HZQWR2GYM4*MTY3Mjc5NzgyMC4xLjAuMTY3Mjc5NzgyMC4wLjAuMA)
 
-> * [Kaggle Dataset](https://www.kaggle.com/dcohen21/8anu-climbing-logbook)
-
-> * [Data Import Report](https://drive.google.com/open?id=1S4io5Nvz0lcnri_Lz9Mpa_TwLNeoSzGb)
+> * [CMS Metric and Provider Data](Hospital_Metrics/)
 
 ## 2. Method
 
-There are three main types of recommenders used in practice today:
+There are several ways to approach this problem of how to determine which features would increase negotiated rates and which one is best for hospitals to focus on. I kept this open ended due to the data available to me:
 
 1. **Content-based filter:** Recommending future items to the user that have similar innate features with previously "liked" items. Basically, content-based relies on similarities between features of the items & needs good item profiles to function properly.
 
@@ -96,20 +94,35 @@ After choosing the SVD++ algorithm, I tested the accuracy of all four different 
 
 ## 7. Predictions
 
-[Final Predictions Notebook](https://colab.research.google.com/drive/1vLkoW_4SYessy_igmJxlVz_jEPlgJ06v)
+[](https://github.com/tennisvs/Springboard/blob/9b03c6b77c0d53012ef0ff02cd39e5930b574ebe/Capstone/psi_hai.png)
 
 In the final predictions notebook, the user can enter their user_id number and receive a list of top ten routes recommended to them:
 
-![](./6_README_files/predictions.png)
+The potential scenarios we explored:
+1. Increasing PSI 15 by a certain percentage or increase HAI 2 SIR by a certain percentage
+2. Increase Demand by certain percentage by acquiring another hospital, either through discharge ratio/hospital days
+3. Increase Number of Interns/Residents
+4. Increase both PSI 15 and HAI 2 by a certain percentage
+
+We accounted for each of these scenarios to determine the new price to be charged:
+
+**For scenario 1:** The model supported this outcome, particularly PSI 15 metric. However the price change would be minimal.
+
+**For scenario 2:** The model did not support this outcome and it would be extremely costly.
+
+**For scenario 3:** The model did not support this outcome, as it would make little change to price of the procedure.
+
+**For scenario 4:** The model supported this outcome, especially if increasing all PSI metrics by +30% or more.
+
+Scenario 4 seems the most appealing to me. Increasing all PSI metrics go hand in hand and hospitals would be required to implement similar measures to increase all metrics. In addition, we did not account for decreases in HAI values, which would probably decrease as well with any hospital implementation of these metrics. However, our hospital seems to be doing well in their metrics.
 
 ## 8. Future Improvements
 
-* In the future, I would love to spend more time creating a filtering system, wherein a climber could filter out the type, difficulty of climb, & country before receiving their top ten recommendation
+* There were certain limitations to the work done. First, looking at the data, I was not able to parse all the values from the JSON files just due to processing power. We were limited in areas where these prices came from, mostly from the state of Florida. In addition, we limited the procedures to look at. The datasets were matched on different time periods given the limitations of this analysis. Using a cloud based server would serve me well for future improvements.
 
-* This recommendation system could also be improved by connecting to the 8a.nu website so that the user could input their actual online ID instead of just their user_id number 
+* Additionally, our model did not have great accuracy, at around 79%. I believe a deeper model might be able to predict the prices at a better rate. Our predictions on how prices affect revenue limits our analysis on what decision is best. But this does show proof of concept.
 
-* Due to RAM constraints on google colab, I had to train a 65% sample of the original 6x dataset. Without resource limitations, I would love to train on the full dataset. Preliminary tests showed that the bigger the training size, the lower the RMSE. One test showed an increase in sample size could increase the RMSE by .03 (in contrast to the .005 improvement I received when increasing the coldstart threshold)
+* Creating an interactive program with different insurance companies would be more informative to different hospitals.
 
 ## 9. Credits
 
-Thanks to Nicolas Hug for his superb surprise library scikit, Colin Brochard for his stellar advice from his Mountain Project recommendation system, and DJ Sarkar for being an amazing Springboard mentor.
