@@ -39,19 +39,21 @@ There are several steps to approach this problem of how to determine which featu
 
 ## 3. Data Cleaning 
 
-In a collaborative-filtering system there are only three columns that matter to apply the machine learning algorithms: the user, the item, and the explicit rating (see the example matrix above). I also had to clean & normalize all the reference information (location, difficulty grade, etc.) to the route so that my user could get a useful and informative recommendation.
+There are several problems that need to be addressed with the dataset before EDA can be approached. Most have to do with the JSON formatting of the Insurance data.
 
-* **Problem 1:** This dataset is all user-entered information. There are a couple drop down options, but for the most part the user is able to completely make-up, or list something incorrectly. **Solution:** after normalizing & cleaning all the columns, I created a three-tier groupby system that I could then take the mode of each entry and fill in the column with that mode. For example: a route listed 12 times had the country Greece associated with it 11 times, but one person incorrectly listed it located in the USA. By grouping together three other indicator columns and then computing the mode of the country, I was able to catch and change some of the user-entered errors and increase the accuracy of my dataset.
+* **Problem 1:** This data is in JSON format with information entered as transactional history. The NPI information is tied to a negotiated rate and procedure. **Solution:** Parse each file individually, utilizing Python libraries like ijson. Then store the data in .csv format or .pickle.
 
-* **Problem 2:** Being this is an international rock climbing website, the names of the rock climbing routes were differing based on if the user enters accent marks or not. **Solution:** normalize all names to the ascii standards. 
+* **Problem 2:** The files are large and consume a large amount HD space and loading all the .csv files into a dataframe would consume a large amount of RAM space **Solution:** Utilized files less than 1 Gigabit, in addition I utilized pythons dask library to parallel process some of computations I needed done.
 
-* **Problem 3:** Spelling issues with the route name. For example: if there was a route named "red rocks canyon" it could be spelled "red rock", "red rocks", "red canyon" etc. **Solution:** at first, I was hopeful and tried two different phonetic spelling algorithms (soundex & double metahpone). However, both of these proved to be too aggressive in their grouping and sometimes would group together up to 20 different individual routes as the same item! My final solution was to create an accurate filter for route names. The logic being that if up to x number of users all entered that *exact same* route name, the chances were good that it was an actual route spelled correctly. I played around with 4 different filters and kept these until I could test their prediction accuracy in the ML portion. I found the greatest prediction accuracy came from the dataset that filtered out any routes listed less than 6 times.
+* **Problem 3:** There are repeated values with different negotiated rates **Solution:** I took the median if their are different negotiated rates for the same procedure tied to the same hospital
+  
+* **Problem 4:** Not enough hospitals had a negotiated rate for certain procedure **Solution:** I eliminated these values due to the small sample size.
 
 ## 4. EDA
 
-[EDA Report](https://colab.research.google.com/drive/14AKVsyXy7yJSxBjmEBFyz7kEX7e9ioM_)
+[EDA Notebook](https://github.com/tennisvs/Springboard/blob/e20a4e709414b05dc1c918e7905938772fe582d2/Capstone/Capstone_Part_5_Data_Wrangling_Overview.ipynb#L8)
 
-* The star-rating distributions all checked out to be normal. It is very common with explicit ratings to see a diminished number of low ratings.
+* There are many avenues I explore here, included how much of a role different demand metrics have on hospitals outside of performance metrics.
 
 ![](./6_README_files/star_counts.png)
 
@@ -122,7 +124,7 @@ I accounted for each of these scenarios to determine the new price to be charged
 
 * Additionally, our model did not have great accuracy, at around 79%. I believe a deeper model might be able to predict the prices at a better rate. Our predictions on how prices affect revenue limits our analysis on what decision is best. But this does show proof of concept.
 
-* Creating an interactive program with different insurance companies would be more informative to different hospitals.
+* Creating an interactive program with different insurance companies would be more informative to different hospitals. Alongside grouping hospitals by different sizes, etc.
 
 ## 9. Credits
 
