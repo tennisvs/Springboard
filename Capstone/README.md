@@ -9,29 +9,35 @@ For this project, I used the United Healthcare Insurance Dataset, which has JSON
 
 > * [United Healthcare Insurance Dataset](https://transparency-in-coverage.uhc.com/?_gl=1*5it7ok*_ga*NjMzOTkzMDA0LjE2NzI3OTc4MjA.*_ga_HZQWR2GYM4*MTY3Mjc5NzgyMC4xLjAuMTY3Mjc5NzgyMC4wLjAuMA)
 
-> * [CMS Metric and Provider Data](Hospital_Metrics/)
+> * [CMS Metric and Provider Data](https://github.com/tennisvs/Springboard/blob/33da40f392e705b0158f1e08198eb5c78c1e615c/Capstone/Hospital_Metrics)
 
 ## 2. Method
 
-There are several ways to approach this problem of how to determine which features would increase negotiated rates and which one is best for hospitals to focus on. I kept this open ended due to the data available to me:
+There are several steps to approach this problem of how to determine which features would increase negotiated rates and which one is best for hospitals to focus on. I kept this open ended due to the data available to me:
 
-1. **Content-based filter:** Recommending future items to the user that have similar innate features with previously "liked" items. Basically, content-based relies on similarities between features of the items & needs good item profiles to function properly.
+1. **Match Providers and Provider Groups to Hospitals:** The JSON files from the United Healthcare Insurance Dataset are extremely large and organized in a transaction fashion. This requires reading each JSON file and determining which provider (NPI) is associated with which hospital. This is part of the parsing process. CMS has NPIs that match to hospitals, which we will use. We made some assumptions that provider groups/hospitals negotiate together, as this would increase their negotiating power for reimbursement rates.
 
-2. **Collaborative-based filter:** Recommending products based on a similar user that has already rated the product. Collaborative filtering relies on information from similar users, and it is important to have a large explicit user rating  base (doesn't work well for new customer bases).
+2. **Determine Negotiated Rates for Procedures and Hospitals:** Part of the parsing process, I need to compile a dataset from the United Healthcare Insurance Dataset of negotiated prices for each procedure for different hospitals. This will be the main dataset I work with. There are various ways procedures are coded, so I will need a way to decipher these codes. Fortunately, there are some publicly available [websites](https://www.aapc.com/codes/cpt-codes-range/) that can be used to determine, which codes match certain procedures.
 
-3. **Hybrid Method:** Leverages both content & collaborative based filtering. Typically, when a new user comes into the recommender, the content-based recommendation takes place. Then after interacting with the items a couple of times, the collaborative/ user based recommendation system will be utilized.
+3. **Determine Procedures and Metrics to build a Model:** Once I have a workable dataset, I will go through the Data Cleaning and EDA, ultimately using EDA to determine which procedure suitable for this analysis. This includes, but is not limited to, how many negotiated rates are available for each procedure, do the metric descriptions match the procedure that they may be used for, how expensive are these procedures, etc. This takes some background knowledge in the healthcare system.
 
-![](./6_README_files/matrix_example.png)
+| Code Type | Code Value | Description | Associated CMS Metric | Metric Details
+| --- | --- | --- | --- | --- |
+| CPT | 36556 | Under Insertion of Central Venous Access Device | HAI_1 | Central Line Associated Bloodstream Infection
+| CPT | 51701 | Under Introduction Procedures on the Bladder | HAI_2 | Catheter Associated Urinary Tract Infections
+| CPT | 51702 | Under Introduction Procedures on the Bladder | HAI_2 | Catheter Associated Urinary Tract Infections
+| HCPCS | A4314 | Insertion tray with drainage bag with indwelling catheter, Foley type, 2-way latex with coating (Teflon, silicone, silicone elastomer or hydrophilic, etc.) | HAI_2 | Catheter Associated Urinary Tract Infections
+| HCPCS | A4315 | Insertion tray with drainage bag with indwelling catheter, Foley type, 2-way, all silicone | HAI_2 | Catheter Associated Urinary Tract Infections
+| HCPCS | G9312 | Surgical site infection | HAI_3 | Surgical Site Infection - Colon Surgery
+| CPT | 58150 | Under Hysterectomy Procedures | HAI_4 | Surgical Site Infection - Abdominal Hysterectomy
+| CPT | 15920 | Under Pressure Ulcers (Decubitus Ulcers) Procedures | PSI-3 | Pressure Ulcer Rate
+| CPT | 35800 | Under Repair, Excision, Exploration, Revision Procedures on Arteries and Veins | PSI-9 | Postoperative hemorrhage or hematoma rate
+| HCPCS | J1650 | Injection, enoxaparin sodium, 10 mg | PSI-12 | Perioperative pulmonary embolism or deep vein thrombosis rate
+| HCPCS | C9604 | Percutaneous transluminal revascularization of or through coronary artery bypass graft (internal mammary, free arterial, venous), any combination of drug-eluting intracoronary stent, atherectomy and angioplasty, including distal protection when performed | MORT_30_CABG | Death rate for CABG surgery patients
 
-
-**WINNER:User-based collaborative filtering system** 
-
-
-I choose to work with a user-based collaborative filtering system. This made the most sense because half of the 4 million user-entered climbs had an explicit rating of how many stars the user would rate the climb. Unfortunately, the data did not have very detailed "item features". Every rock climbing route had an area, a difficulty grade, and a style of climbing (roped or none). This would not have been enough data to provide an accurate content-based recommendation. In the future, I would love to experiment using a hybrid system to help solve the problem of the cold-start-threshold.
+4. **Build the Model:** Finally I will build a supervised learning model. I will explore gradient trees, to K means clusters and evaluate performance on metrics discussed below. Ultimately we will use this model to select a hospital and determine what metrics I can manipulate to help increase the negotiated reimbursement. Under this circumstance, I will assume the hospital has limited resources financially.
 
 ## 3. Data Cleaning 
-
-[Data Cleaning Report](https://drive.google.com/open?id=195wcooDtT2XhfpRXREWmLovm8XZPNymy)
 
 In a collaborative-filtering system there are only three columns that matter to apply the machine learning algorithms: the user, the item, and the explicit rating (see the example matrix above). I also had to clean & normalize all the reference information (location, difficulty grade, etc.) to the route so that my user could get a useful and informative recommendation.
 
@@ -94,27 +100,21 @@ After choosing the SVD++ algorithm, I tested the accuracy of all four different 
 
 ## 7. Predictions
 
-[](https://github.com/tennisvs/Springboard/blob/9b03c6b77c0d53012ef0ff02cd39e5930b574ebe/Capstone/psi_hai.png)
-
-In the final predictions notebook, the user can enter their user_id number and receive a list of top ten routes recommended to them:
-
-The potential scenarios we explored:
-1. Increasing PSI 15 by a certain percentage or increase HAI 2 SIR by a certain percentage
+The potential scenarios I explored:
+1. Increasing either PSI 15 by a certain percentage or increase HAI 2 SIR by a certain percentage
 2. Increase Demand by certain percentage by acquiring another hospital, either through discharge ratio/hospital days
 3. Increase Number of Interns/Residents
 4. Increase both PSI 15 and HAI 2 by a certain percentage
 
-We accounted for each of these scenarios to determine the new price to be charged:
+I accounted for each of these scenarios to determine the new price to be charged:
 
 **For scenario 1:** The model supported this outcome, particularly PSI 15 metric. However the price change would be minimal.
-
 **For scenario 2:** The model did not support this outcome and it would be extremely costly.
-
 **For scenario 3:** The model did not support this outcome, as it would make little change to price of the procedure.
-
 **For scenario 4:** The model supported this outcome, especially if increasing all PSI metrics by +30% or more.
 
-Scenario 4 seems the most appealing to me. Increasing all PSI metrics go hand in hand and hospitals would be required to implement similar measures to increase all metrics. In addition, we did not account for decreases in HAI values, which would probably decrease as well with any hospital implementation of these metrics. However, our hospital seems to be doing well in their metrics.
+*Scenario 4* seems the most appealing to me. Increasing all PSI metrics go hand in hand and hospitals would be required to implement similar measures to increase all metrics. In addition, we did not account for decreases in HAI values, which would probably decrease as well with any hospital implementation of these metrics. However, our hospital seems to be doing well in their metrics.
+[Scenario 4](https://github.com/tennisvs/Springboard/blob/9b03c6b77c0d53012ef0ff02cd39e5930b574ebe/Capstone/psi_hai.png)
 
 ## 8. Future Improvements
 
