@@ -35,7 +35,7 @@ There are several steps to approach this problem of how to determine which featu
 | HCPCS | J1650 | Injection, enoxaparin sodium, 10 mg | PSI-12 | Perioperative pulmonary embolism or deep vein thrombosis rate
 | HCPCS | C9604 | Percutaneous transluminal revascularization of or through coronary artery bypass graft (internal mammary, free arterial, venous), any combination of drug-eluting intracoronary stent, atherectomy and angioplasty, including distal protection when performed | MORT_30_CABG | Death rate for CABG surgery patients
 
-4. **Build the Model:** Finally I will build a supervised learning model. I will explore gradient trees, to K means clusters and evaluate performance on metrics discussed below. Ultimately we will use this model to select a hospital and determine what metrics I can manipulate to help increase the negotiated reimbursement. Under this circumstance, I will assume the hospital has limited resources financially.
+4. **Build the Model:**  I will build a supervised learning model. This includes random forest trees, to K means clustering and evaluate performance on metrics discussed below. Ultimately, I will use this model to select a hospital and determine what metrics I can manipulate to help increase the negotiated reimbursement. Under this circumstance, I will assume the hospital has limited resources financially. I will pick a hospital based on the data present, selecting a hospital that falls within or near large counts of features.
 
 ## 3. Data Cleaning 
 
@@ -51,58 +51,22 @@ There are several problems that need to be addressed with the dataset before EDA
 
 ## 4. EDA
 
-[EDA Notebook](https://github.com/tennisvs/Springboard/blob/e20a4e709414b05dc1c918e7905938772fe582d2/Capstone/Capstone_Part_5_Data_Wrangling_Overview.ipynb#L8)
+[EDA Notebook](https://github.com/tennisvs/Springboard/blob/e20a4e709414b05dc1c918e7905938772fe582d2/Capstone/Capstone_Part_5_Data_Wrangling_Overview.ipynb)
 
-* There are many avenues I explore here, included how much of a role different demand metrics have on hospitals outside of performance metrics.
+* There are many avenues I explored within EDA. Examples include demand metrics(population, size of hospital) and economic metrics(median salary, urban vs rural). PCA looking at certain metrics was applied. Some of the exploration included looking at procedures and determining which procedures had larger negotiated rates and a good sample size of different hospitals to explore. Ultimately *CPT 58150* was selected. 
 
-![](./6_README_files/star_counts.png)
-
+![](state_r_u.png)
 ## 5. Algorithms & Machine Learning
 
-[ML Notebook](https://colab.research.google.com/drive/1kAlvwwJnGcdCAJD8oFokT3gtJF2UnyZP)
+[Model Exploration](https://github.com/tennisvs/Springboard/blob/5d1b3e89097a2be1f73a9b0a4349d9dd95601879/Capstone/Capstone_Part_6_Preprocessing_and_Training.ipynb)
 
-I chose to work with the Python [surprise library scikit](http://surpriselib.com/) for training my recommendation system. I tested all four different filtered datasets on the 11 different algorithms provided, and every time the Single Value Decomposition++ (SVD++) algorithm performed the best. It should be noted that this algorithm, although the most accurate is also the most computationally expensive, and that should be taken into account if this were to go into production.
+I chose to work with the Python [sklearn](https://scikit-learn.org/) library and [xgboost](https://xgboost.readthedocs.io/en/stable/) for training my creating my model. I was able to try various supervised learning algorithms, but had the best performance from a grandiant boosted random forest regressor. The parameters were tuned using grid search.
 
-![](./6_README_files/algo.png)
+>***NOTE:** I choose RMSE as the accuracy metric since it has higher weight for large errors.
 
->***NOTE:** I choose RMSE as the accuracy metric over mean absolute error(MAE) because the errors are squared before they are averaged which gives the RMSE a higher weight to large errors. Thus, the RMSE is useful when large errors are undesirable. The smaller the RMSE, the more accurate the prediction because the RMSE takes the square root of the residual errors of the line of best fit.*
+## 6. Predictions
 
-**WINNER: SVD++ Algorithm**
-
-This algorithm is an improved version of the SVD algorithm that Simon Funk popularized in the million dollar Netflix competition that also takes into account implicit ratings (*yj*). Using stochastic gradient descent (SGD), parameters are learned using the regularized squared error objective.
-
-![](./6_README_files/forumla.png)
-
-## 6. Which Dataset to choose?
-
-[More details about this process...](https://colab.research.google.com/drive/1kAlvwwJnGcdCAJD8oFokT3gtJF2UnyZP)
-
-After choosing the SVD++ algorithm, I tested the accuracy of all four different filtered datasets. The dataset which filtered out any route names occurring less than 6 times performed the most accurate predictions. Thus, it was chosen to be the dataset I trained on.
-
->* All of the dataframes displayed discrepancies with the 1 star ratings(This is to be expected due to the inherent skewed positive ratings). Also, the one star ratings are not imperative to this project's goal. It is more important that the 1 star ratings are different enough to be filtered out of the top ten routes recommended to users. 
->* Notice the 3-star rating has a fat bulge at the top of the "violin" which indicates its predicting 3-star ratings for some of the true 3-star routes. This was not as prominent in the other dataframes
->* The 1-star rating also has a fatter tail than the other datasets displayed
-
-
-![](./6_README_files/accuracy.png)
-
-## 7. Coldstart Threshold
-[More details about this process...](https://colab.research.google.com/drive/1kAlvwwJnGcdCAJD8oFokT3gtJF2UnyZP)
-
-**Coldstart Threshold**: There is a problem when only using collaborative based filtering: *what to recommend to new users with very little or no prior data?* Remember, we already set our cold start threshold for the routes by choosing the dataset that filtered out any route occurring less than 6 times. Now, let investigate where to put the threshold for users.
-
-![](./6_README_files/20user_thresh.png)
-
-*It is my hypothesis that the initial filtering of the routes is what affected the RMSE of the users* 
-
->* Increasing the user threshold to 5 would increase the RMSE by .005 & would lose approximately 40% of the data.
->* Increasing the user threshold to 13 would increase the RMSE by .0075 & would lose approximately 60% of the data
->* If there were a larger increase in the RMSE (>= .01) I would trade my users' data for this improvement. However, these improvements are too minuscule to give up 40%-60% of my data to train on. Instead, I voted to keep some of these outliers to help the model train, and will focus on fine tuning my parameters using gridsearch to improve the RMSE
-
-
-## 7. Predictions
-
-The potential scenarios I explored:
+The potential scenarios I explored for a random Florida hospital selected:
 1. Increasing either PSI 15 by a certain percentage or increase HAI 2 SIR by a certain percentage
 2. Increase Demand by certain percentage by acquiring another hospital, either through discharge ratio/hospital days
 3. Increase Number of Interns/Residents
@@ -110,6 +74,7 @@ The potential scenarios I explored:
 
 I accounted for each of these scenarios to determine the new price to be charged:
 
+[Model Exploration](https://github.com/tennisvs/Springboard/blob/5d1b3e89097a2be1f73a9b0a4349d9dd95601879/Capstone/Capstone_Part_7_Model.ipynb)
 **For scenario 1:** The model supported this outcome, particularly PSI 15 metric. However the price change would be minimal.
 **For scenario 2:** The model did not support this outcome and it would be extremely costly.
 **For scenario 3:** The model did not support this outcome, as it would make little change to price of the procedure.
@@ -127,4 +92,4 @@ I accounted for each of these scenarios to determine the new price to be charged
 * Creating an interactive program with different insurance companies would be more informative to different hospitals. Alongside grouping hospitals by different sizes, etc.
 
 ## 9. Credits
-
+I would like to thank Springboard group and Branko, my mentor, for their help with this project.
