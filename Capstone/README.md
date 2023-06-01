@@ -81,7 +81,8 @@ I accounted for each of these scenarios to determine the new price to be charged
 **For scenario 4:** The model supported this outcome, especially if increasing all PSI metrics by +30% or more.
 
 *Scenario 4* seems the most appealing to me. Increasing all PSI metrics go hand in hand and hospitals would be required to implement similar measures to increase all metrics. In addition, we did not account for decreases in HAI values, which would probably decrease as well with any hospital implementation of these metrics. However, our hospital seems to be doing well in their metrics.
-[Scenario 4](https://github.com/tennisvs/Springboard/blob/9b03c6b77c0d53012ef0ff02cd39e5930b574ebe/Capstone/psi_hai.png)
+
+![](psi_hai.png)
 
 ## 8. Future Improvements
 
