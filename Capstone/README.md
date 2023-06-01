@@ -62,7 +62,7 @@ There are several problems that need to be addressed with the dataset before EDA
 
 I chose to work with the Python [sklearn](https://scikit-learn.org/) library and [xgboost](https://xgboost.readthedocs.io/en/stable/) for training my creating my model. I was able to try various supervised learning algorithms, but had the best performance from a grandiant boosted random forest regressor. The parameters were tuned using grid search.
 
->***NOTE:** I choose RMSE as the accuracy metric since it has higher weight for large errors.
+>***NOTE:** I choose mean absolute percentage error(MAPE) as the evaluation metric since determining exact value would be quiet difficult. We want a value within the range of the true value, this metric works well with our objective.
 
 ## 6. Predictions
 
