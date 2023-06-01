@@ -93,4 +93,4 @@ I accounted for each of these scenarios to determine the new price to be charged
 * Creating an interactive program with different insurance companies would be more informative to different hospitals. Alongside grouping hospitals by different sizes, etc.
 
 ## 9. Credits
-I would like to thank Springboard group and Branko, my mentor, for their help with this project.
+I would like to thank Springboard group and Branko Kovac, my mentor, for their help with this project.
