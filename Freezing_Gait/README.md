@@ -1,96 +1,76 @@
 [![Freezing_of_Gait](https://img.youtube.com/vi/3-wrNhyVTNE/0.jpg)](https://www.youtube.com/watch?v=3-wrNhyVTNE&ab_channel=TheLancet)
 # How to Detect Freezing of Gait Events for Parkinson's Patients?
 
-*Healthcare within the United States is extremely complex. The United States has attributes of all healthcare models(Medicare akin to Canada's model and Veteran's Affair like Germany's model) around the world present; however, the majority of citizens, [around 66%, have private insurance, while 35.7% have a form of public healthcare insurance](https://www.census.gov/library/publications/2022/demo/p60-278.html). Citizens with private insurance utilize private hospitals/providers for their healthcare needs. Their insurance provider pays/reimburses the private hospitals/providers for their clients. How much they pay the provider for their services is negotiated for between the insurance company and provider. These negotiated rates have many factors that go into determining reimbursement and includes various economic factors (supply vs demand, economies of scales, cost of services, etc) alongside internal metrics that are unknown. Most of these prices are closed book or held private by insurance companies within the USA, at least until recently. Congress passed [amendments that required health insurance companies to publish their reimbursement data for procedures](https://www.uhc.com/united-for-reform/health-reform-provisions/transparency-in-coverage-rule). This can be used by hospitals to determine how much other hospitals may be charged for a similar procedure. In addition, since the Affordable Care Act, the whole healthcare industry has been heading towards performance based pricing, or using performance metrics of providers to determine their reimbursement. Currently the government has been doing this for various providers and certain private insurance companies have been public about using similar metrics. My goal is determine which metrics hospitals should focus on in order to increase their reimbursement from private insurance companies.*
+*Parkinson's Disease is a brain disorder that causes unintended and uncontrollable movements, such as shaking, stiffness, and difficulty with balance and coordination. It affects 7 to 10 million Americans. Many Parkinson's patients suffer from Freezing of Gait(FOG). Freezing of Gait events causes a patient's feet to feel “glued” to the ground, preventing them from moving forward despite their attempts. **Please refer to the video above for an example.** Quality of life is negatively impacted by these events, particularly increased risk of falling, potentially leaving Parkinson's Disease patients confined to a wheelchair and unable to live independently. While researchers have multiple theories to explain when, why, and in whom FOG occurs, there is still no clear understanding of its causes. The purpose of this project is to help detect these FOG events to allow researchers to better understand them.*
 
+This is part of a Kaggle competition. The goal of this competition is to detect freezing of gait (FOG) using data collected from a wearable 3D lower back sensor. From the [competition website](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/):
+> "There are many methods of evaluating FOG, though most involve FOG-provoking protocols. People with FOG are filmed while performing certain tasks that are likely to increase its occurrence. Experts then review the video to score each frame, indicating when FOG occurred. While scoring in this manner is relatively reliable and sensitive, it is extremely time-consuming and requires specific expertise. Another method involves augmenting FOG-provoking testing with wearable devices. With more sensors, the detection of FOG becomes easier, however, compliance and usability may be reduced. Therefore, a combination of these two methods may be the best approach. When combined with machine learning methods, the accuracy of detecting FOG from a lower back accelerometer is relatively high. However, the datasets used to train and test these algorithms have been relatively small and generalizability is limited to date. Furthermore, the emphasis has been on achieving high levels of accuracy, while precision, for example, has largely been ignored. <br>
+> Competition host, the Center for the Study of Movement, Cognition, and Mobility (CMCM), Neurological Institute, Tel Aviv Sourasky Medical Center, aims to improve the personalized treatment of age-related movement, cognition, and mobility disorders and to alleviate the associated burden. They leverage a combination of clinical, engineering, and neuroscience expertise to: 
+> 1. Gain new understandings into the physiologic and pathophysiologic mechanisms that contribute to cognitive and motor function, the factors that influence these functions, and their changes with aging and disease (e.g., Parkinson’s disease, Alzheimer’s).
+> 2. Develop new methods and tools for the early detection and tracking of cognitive and motor decline. A major focus is on leveraging wearable devices and digital technologies.
+> 3. Develop and evaluate novel methods for the prevention and treatment of gait, falls, and cognitive function."
 ## 1. Data
 
-For this project, I used the United Healthcare Insurance Dataset, which has JSON files for all the companies covered by United Health Care and all the purchases for the given year for these clients. This is an extremely large dataset so I was only able to use a part of it (some of these files are terabytes in size). Secondly, I needed files to link providers to hospitals alongside hospital metrics. Fortunately the CMS has publicly available metrics and provider affiliations to hospitals. The folder here contains many metrics; I will only use some of these.
+For this project, I used the [Kaggle Dataset](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/) set up by the The Michael J. Fox Foundation. This dataset is broken up into several parts:<br>
+***[Kaggle Wearable Sensor Data](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/data)***
+>- The **tDCS FOG (tdcsfog) dataset**, comprising data series collected in the lab, as subjects completed a FOG-provoking protocol.
+>- The **DeFOG (defog) dataset**, comprising data series collected in the subject's home, as subjects completed a FOG-provoking protocol
+>- The **Daily Living (daily) dataset**, comprising one week of continuous 24/7 recordings from sixty-five subjects. Forty-five subjects exhibit FOG symptoms and also have series in the defog dataset, while the other twenty subjects do not exhibit FOG symptoms and do not have series elsewhere in the data.
 
-> * [United Healthcare Insurance Dataset](https://transparency-in-coverage.uhc.com/?_gl=1*5it7ok*_ga*NjMzOTkzMDA0LjE2NzI3OTc4MjA.*_ga_HZQWR2GYM4*MTY3Mjc5NzgyMC4xLjAuMTY3Mjc5NzgyMC4wLjAuMA)
+This data is `AccV`, `AccML`, and `AccAP` Acceleration from a lower-back sensor on three axes: V - vertical, ML - mediolateral, AP - anteroposterior. The data also includes some patient information, including `Age`, `Sex`, alongside disease progression data like `Unified Parkinson's Disease Rating Scale`.
+## 2. Methods
 
-> * [CMS Metric and Provider Data](https://github.com/tennisvs/Springboard/blob/33da40f392e705b0158f1e08198eb5c78c1e615c/Capstone/Hospital_Metrics)
+There are several steps to approach this problem of how to determine which features would increase negotiated rates and which one is best for hospitals to focus on. This is kept open ended and required going back and forth between steps:
 
-## 2. Method
+1. **Exploratory Data Analysis:** This is key. It is important to a look at this data to determine how to proceed with future steps. What triggers events? What are the difference that can be identified between `StartHesitation`, `Walking`, or `Turning`. Does the patient information matter. What is the best way to create features and what models might be useful for this problem? Should we combine datasets into one model? These are just some of the insights I hope to get from this section.
 
-There are several steps to approach this problem of how to determine which features would increase negotiated rates and which one is best for hospitals to focus on. I kept this open ended due to the data available to me:
+2. **Feature Creature/Feature Selection:** Creating features based off the data will be important. This is a lot of data we are working with, and even though Kaggle provides GPU/TPUs for use, it will be about creating useful features, while also using a limiting the amount of them for whichever model we choose.
 
-1. **Match Providers and Provider Groups to Hospitals:** The JSON files from the United Healthcare Insurance Dataset are extremely large and organized in a transaction fashion. This requires reading each JSON file and determining which provider (NPI) is associated with which hospital. This is part of the parsing process. CMS has NPIs that match to hospitals, which we will use. We made some assumptions that provider groups/hospitals negotiate together, as this would increase their negotiating power for reimbursement rates.
+3. **Build Models:**  Finally we will create models using TensorFlow/Keras and other python libraries. The goal of the model is to classify events, so this will be a classification question, and we will use accuracy as our metric. Since the data has labelled and unlabeled data, we have to decide if unsupervised/semi-supervised model is a worthwhile pursuit.
 
-2. **Determine Negotiated Rates for Procedures and Hospitals:** Part of the parsing process, I need to compile a dataset from the United Healthcare Insurance Dataset of negotiated prices for each procedure for different hospitals. This will be the main dataset I work with. There are various ways procedures are coded, so I will need a way to decipher these codes. Fortunately, there are some publicly available [websites](https://www.aapc.com/codes/cpt-codes-range/) that can be used to determine, which codes match certain procedures.
+## 3. Data Cleaning/Wrangling
 
-3. **Determine Procedures and Metrics to build a Model:** Once I have a workable dataset, I will go through the Data Cleaning and EDA, ultimately using EDA to determine which procedure suitable for this analysis. This includes, but is not limited to, how many negotiated rates are available for each procedure, do the metric descriptions match the procedure that they may be used for, how expensive are these procedures, etc. This takes some background knowledge in the healthcare system.
+* **Problem 1:** Each file for a patient is a different size length. **Solution:** Our model will pad files as we feed them in batches.
 
-| Code Type | Code Value | Description | Associated CMS Metric | Metric Details
-| --- | --- | --- | --- | --- |
-| CPT | 36556 | Under Insertion of Central Venous Access Device | HAI_1 | Central Line Associated Bloodstream Infection
-| CPT | 51701 | Under Introduction Procedures on the Bladder | HAI_2 | Catheter Associated Urinary Tract Infections
-| CPT | 51702 | Under Introduction Procedures on the Bladder | HAI_2 | Catheter Associated Urinary Tract Infections
-| HCPCS | A4314 | Insertion tray with drainage bag with indwelling catheter, Foley type, 2-way latex with coating (Teflon, silicone, silicone elastomer or hydrophilic, etc.) | HAI_2 | Catheter Associated Urinary Tract Infections
-| HCPCS | A4315 | Insertion tray with drainage bag with indwelling catheter, Foley type, 2-way, all silicone | HAI_2 | Catheter Associated Urinary Tract Infections
-| HCPCS | G9312 | Surgical site infection | HAI_3 | Surgical Site Infection - Colon Surgery
-| CPT | 58150 | Under Hysterectomy Procedures | HAI_4 | Surgical Site Infection - Abdominal Hysterectomy
-| CPT | 15920 | Under Pressure Ulcers (Decubitus Ulcers) Procedures | PSI-3 | Pressure Ulcer Rate
-| CPT | 35800 | Under Repair, Excision, Exploration, Revision Procedures on Arteries and Veins | PSI-9 | Postoperative hemorrhage or hematoma rate
-| HCPCS | J1650 | Injection, enoxaparin sodium, 10 mg | PSI-12 | Perioperative pulmonary embolism or deep vein thrombosis rate
-| HCPCS | C9604 | Percutaneous transluminal revascularization of or through coronary artery bypass graft (internal mammary, free arterial, venous), any combination of drug-eluting intracoronary stent, atherectomy and angioplasty, including distal protection when performed | MORT_30_CABG | Death rate for CABG surgery patients
+* **Problem 2:** The files are large and numerous. **Solution:** We will utilize GCP's GPU available from the Kaggle.
 
-4. **Build the Model:**  I will build a supervised learning model. This includes random forest trees, to K means clustering and evaluate performance on metrics discussed below. Ultimately, I will use this model to select a hospital and determine what metrics I can manipulate to help increase the negotiated reimbursement. Under this circumstance, I will assume the hospital has limited resources financially. I will pick a hospital based on the data present, selecting a hospital that falls within or near large counts of features.
-
-## 3. Data Cleaning 
-
-There are several problems that need to be addressed with the dataset before EDA can be approached. Most have to do with the JSON formatting of the Insurance data.
-
-* **Problem 1:** This data is in JSON format with information entered as transactional history. The NPI information is tied to a negotiated rate and procedure. **Solution:** Parse each file individually, utilizing Python libraries like ijson. Then store the data in .csv format or .pickle.
-
-* **Problem 2:** The files are large and consume a large amount HD space and loading all the .csv files into a dataframe would consume a large amount of RAM space **Solution:** Utilized files less than 1 Gigabit, in addition I utilized pythons dask library to parallel process some of computations I needed done.
-
-* **Problem 3:** There are repeated values with different negotiated rates **Solution:** I took the median if their are different negotiated rates for the same procedure tied to the same hospital
-  
-* **Problem 4:** Not enough hospitals had a negotiated rate for certain procedure **Solution:** I eliminated these values due to the small sample size.
+* **Problem 3:** There are unlabeled files. **Solution:** I was able to read community posts of how unsupervised learning was not working well for numerous people, so I decided to ignore this dataset.
 
 ## 4. EDA
 
-[EDA Notebook](https://github.com/tennisvs/Springboard/blob/e20a4e709414b05dc1c918e7905938772fe582d2/Capstone/Capstone_Part_5_Data_Wrangling_Overview.ipynb)
+[EDA Notebook](https://github.com/tennisvs/Springboard/blob/765d752ffd4bf0befd4e3c4b471d852d1824ff57/Freezing_Gait/1-eda-parkinsons-freezing-gait.ipynb)
 
-* There are many avenues I explored within EDA. Examples include demand metrics(population, size of hospital) and economic metrics(median salary, urban vs rural). PCA looking at certain metrics was applied. Some of the exploration included looking at procedures and determining which procedures had larger negotiated rates and a good sample size of different hospitals to explore. Ultimately *CPT 58150* was selected. 
+There are many avenues I explored within EDA. However, the main goal was to look at events and determine the following:
+- Is there a pattern to these labelled events? Yes, I noticed most events began and ended with great deltas increases and decreases in each accelerometer.
+- How useful was the patient information? Much of the patient information was highly correlated with one another, but not necessarily the event itself.
+- How "messy" was the accelerometer data? It seems like the data needed to be normalized.
+- Can I combine the at home readings with the readings done at the doctors? The data seemed quite different, so I decided to separate the data for model building.
+<img src="Pictures\Accelerometer_Measurements.png"  width="60%" height="30%">
 
-![](state_r_u.png)
 ## 5. Algorithms & Machine Learning
 
-[Model Exploration](https://github.com/tennisvs/Springboard/blob/5d1b3e89097a2be1f73a9b0a4349d9dd95601879/Capstone/Capstone_Part_6_Preprocessing_and_Training.ipynb)
+[Model Submission](https://github.com/tennisvs/Springboard/blob/765d752ffd4bf0befd4e3c4b471d852d1824ff57/Freezing_Gait/2-submission-freezing-gait.ipynb)
 
-I chose to work with the Python [sklearn](https://scikit-learn.org/) library and [xgboost](https://xgboost.readthedocs.io/en/stable/) for training my creating my model. I was able to try various supervised learning algorithms, but had the best performance from a grandiant boosted random forest regressor. The parameters were tuned using grid search.
+Feature Creation/Selection: In the end, the final model used normalized the readings for each accelerometer input as part of the model. I limited the features by not including any patient data. I did try rolling windows in previous models, alongside aggregate data, but this did not seem to have much effect.
 
->***NOTE:** I choose mean absolute percentage error(MAPE) as the evaluation metric since determining exact value would be quiet difficult. We want a value within the range of the true value, this metric works well with our objective.
+I chose to work with the Python [sklearn](https://scikit-learn.org/) library and [TensorFlow](https://www.tensorflow.org/) for training my creating my model. In addition, I took a lot of inspiration from the work of [Baurzhan Urazalinov](https://www.kaggle.com/baurzhanurazalinov). You can find his work on Kaggle. He was the ultimate winner of the competition. I created two seperate models, one for the `Tdfog Dataset` and another for the `Defog Dataset`.The models are a combination of transformer encoder, which you can read about [here](https://arxiv.org/pdf/1706.03762.pdf) and bi-directional LSTMs. The reasoning behind choosing this, based off EDTA and me trying simple models is as follows:
+- **Reason for LSTMs**: Based of EDTA, it becomes evident that there is a clear spike in a certain value and that triggers a fog event. LSTMs made sense for this. In addition, it came to my attention that the event also was stopped at future point in the future of the reading, and hence why bidirectional LSTMs were used. However, these are memory/computationally expensive, and had to rely on others for the code here.
+- ***Reason for Transformer***: this is the part of model I relied on help from others in the Kaggle community
+>"a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output.
+The Transformer allows for significantly more parallelization and can reach a new state of the art in
+translation quality after being trained for as little as twelve hours on eight P100 GPUs." - [Attention Is All You Need](https://arxiv.org/pdf/1706.03762.pdf)
+- Limited the data, I did not use any of the subject data, or medication data. The community stated that this data had limited effect. In my simpler models, I tried combine a single directional LSTM with subject data, it had little impact.
+- No features: outside of normalization, bidirectional LSTMs are memory and computationally intensive, limiting the resolution is key here. In simpler models I created, I was not performing nearly as well.
+- During training, there is slight randomized rolling of positional encoding was done here, as done by the [Baurzhan Urazalinov](https://www.kaggle.com/baurzhanurazalinov). I decided to keep it here.
 
-## 6. Predictions
+>***NOTE:** Since this was a classification problem, as stated in above, accuracy was the metric used. This submission had an accuracy of `0.410856`.
+## 6. Future Improvements
 
-The potential scenarios I explored for a random Florida hospital selected:
-1. Increasing either PSI 15 by a certain percentage or increase HAI 2 SIR by a certain percentage
-2. Increase Demand by certain percentage by acquiring another hospital, either through discharge ratio/hospital days
-3. Increase Number of Interns/Residents
-4. Increase both PSI 15 and HAI 2 by a certain percentage
+* Different Models: Creating different models and averaging the scores is a method that [Baurzhan Urazalinov](https://www.kaggle.com/baurzhanurazalinov) utilized, and something I would have liked to use in the future. I was limited in time. In addition, I did not use the TPU and may have yielded faster results.
+* Combining datasets: There might have been a way to label the `daily dataset` through an unsupervised method or even by just looking at the data myself. Though this would be time intensive, it might have yielded more data to train the models. 
+* Creating a roadmap of the process: This is coming soon.
 
-I accounted for each of these scenarios to determine the new price to be charged:
+## 7. Credits
+I would like to thank Springboard group and Branko Kovac, my mentor, for their help with this project. In addition, I wanted to thank [Baurzhan Urazalinov](https://www.kaggle.com/baurzhanurazalinov) for his guidance and work in this area. This was truly a great learning experience.
 
-[Model Exploration](https://github.com/tennisvs/Springboard/blob/5d1b3e89097a2be1f73a9b0a4349d9dd95601879/Capstone/Capstone_Part_7_Model.ipynb)
-**For scenario 1:** The model supported this outcome, particularly PSI 15 metric. However the price change would be minimal.
-**For scenario 2:** The model did not support this outcome and it would be extremely costly.
-**For scenario 3:** The model did not support this outcome, as it would make little change to price of the procedure.
-**For scenario 4:** The model supported this outcome, especially if increasing all PSI metrics by +30% or more.
 
-*Scenario 4* seems the most appealing to me. Increasing all PSI metrics go hand in hand and hospitals would be required to implement similar measures to increase all metrics. In addition, we did not account for decreases in HAI values, which would probably decrease as well with any hospital implementation of these metrics. However, our hospital seems to be doing well in their metrics.
-
-![](psi_hai.png)
-
-## 8. Future Improvements
-
-* There were certain limitations to the work done. First, looking at the data, I was not able to parse all the values from the JSON files just due to processing power. We were limited in areas where these prices came from, mostly from the state of Florida. In addition, we limited the procedures to look at. The datasets were matched on different time periods given the limitations of this analysis. Using a cloud based server would serve me well for future improvements.
-
-* Additionally, our model did not have great accuracy, at around 79%. I believe a deeper model might be able to predict the prices at a better rate. Our predictions on how prices affect revenue limits our analysis on what decision is best. But this does show proof of concept.
-
-* Creating an interactive program with different insurance companies would be more informative to different hospitals. Alongside grouping hospitals by different sizes, etc.
-
-## 9. Credits
-I would like to thank Springboard group and Branko Kovac, my mentor, for their help with this project.
