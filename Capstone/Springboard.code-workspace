@@ -6,6 +6,10 @@
 		{
 			"name": "org_atlas",
 			"path": "../../org_atlas"
+		},
+		{
+			"name": "private",
+			"path": "../../private"
 		}
 	],
 	"settings": {
